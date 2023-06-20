@@ -10,31 +10,39 @@ import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.core.xcontent.XContentParser;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken;
+import static org.opensearch.conversation.response.ChatResponse.ANSWER_FIELD;
 
 @Data
-public class CreateConversationInput implements ToXContentObject, Writeable {
-    public static final String USER_ID_FIELD = "user_id";
+public class ChatInput implements ToXContentObject, Writeable {
+    public static final String SESSION_ID_FIELD = "session_id";
     public static final String MODEL_ID_FIELD = "model_id";
+    public static final String ML_PARAMETERS_FIELD = "parameters";
 
-    private String userId;
+    private String sessionId;
     private String modelId;
+    private Map<String, String> parameters;
 
     @Builder(toBuilder = true)
-    public CreateConversationInput(String userId, String modelId) {
-        this.userId = userId;
+    public ChatInput(String sessionId, String modelId, Map<String, String> parameters) {
+        this.sessionId = sessionId;
         this.modelId = modelId;
+        this.parameters = parameters;
     }
 
-    public CreateConversationInput (StreamInput in) throws IOException {
-        this.userId = in.readString();
+    public ChatInput(StreamInput in) throws IOException {
+        this.sessionId = in.readString();
         this.modelId = in.readString();
+        this.parameters = in.readMap(s -> s.readString(), s -> s.readString());
     }
 
-    public static CreateConversationInput parse(XContentParser parser) throws IOException {
+    public static ChatInput parse(XContentParser parser) throws IOException {
         String userId = null;
         String modelId = null;
+        Map<String, String> parameters = new HashMap<>();
 
         ensureExpectedToken(XContentParser.Token.START_OBJECT, parser.currentToken(), parser);
         while (parser.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -42,11 +50,14 @@ public class CreateConversationInput implements ToXContentObject, Writeable {
             parser.nextToken();
 
             switch (fieldName) {
-                case USER_ID_FIELD:
+                case SESSION_ID_FIELD:
                     userId = parser.text();
                     break;
                 case MODEL_ID_FIELD:
                     modelId = parser.text();
+                    break;
+                case ML_PARAMETERS_FIELD:
+                    parameters = parser.mapStrings();
                     break;
                 default:
                     parser.skipChildren();
@@ -54,23 +65,27 @@ public class CreateConversationInput implements ToXContentObject, Writeable {
             }
         }
 
-        return new CreateConversationInput(userId, modelId);
+        return new ChatInput(userId, modelId, parameters);
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        out.writeString(userId);
+        out.writeString(sessionId);
         out.writeString(modelId);
+        out.writeMap(parameters, StreamOutput::writeString, StreamOutput::writeString);
     }
 
     @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject();
-        if (userId != null) {
-            builder.field(USER_ID_FIELD, userId);
+        if (sessionId != null) {
+            builder.field(SESSION_ID_FIELD, sessionId);
         }
         if (modelId != null) {
             builder.field(MODEL_ID_FIELD, modelId);
+        }
+        if (parameters != null) {
+            builder.field(ML_PARAMETERS_FIELD, parameters);
         }
         builder.endObject();
         return builder;

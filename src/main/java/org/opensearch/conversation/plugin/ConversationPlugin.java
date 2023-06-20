@@ -13,16 +13,24 @@ import org.opensearch.action.ActionRequest;
 import org.opensearch.action.ActionResponse;
 import org.opensearch.client.Client;
 import org.opensearch.cluster.metadata.IndexNameExpressionResolver;
+import org.opensearch.cluster.node.DiscoveryNodes;
 import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.io.stream.NamedWriteableRegistry;
-import org.opensearch.conversation.action.TransportCreateConversationAction;
-import org.opensearch.conversation.transport.CreateConversationAction;
+import org.opensearch.common.settings.ClusterSettings;
+import org.opensearch.common.settings.IndexScopedSettings;
+import org.opensearch.common.settings.Settings;
+import org.opensearch.common.settings.SettingsFilter;
+import org.opensearch.conversation.action.TransportChatAction;
+import org.opensearch.conversation.rest.RestChatAction;
+import org.opensearch.conversation.transport.ChatAction;
 import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.env.Environment;
 import org.opensearch.env.NodeEnvironment;
 import org.opensearch.plugins.ActionPlugin;
 import org.opensearch.plugins.Plugin;
 import org.opensearch.repositories.RepositoriesService;
+import org.opensearch.rest.RestController;
+import org.opensearch.rest.RestHandler;
 import org.opensearch.script.ScriptService;
 import org.opensearch.threadpool.ThreadPool;
 import org.opensearch.watcher.ResourceWatcherService;
@@ -37,7 +45,23 @@ public class ConversationPlugin extends Plugin implements ActionPlugin {
     public List<ActionHandler<? extends ActionRequest, ? extends ActionResponse>> getActions() {
         return List
                 .of(
-                        new ActionHandler<>(CreateConversationAction.INSTANCE, TransportCreateConversationAction.class)
+                        new ActionHandler<>(ChatAction.INSTANCE, TransportChatAction.class)
+                );
+    }
+
+    @Override
+    public List<RestHandler> getRestHandlers(
+            Settings settings,
+            RestController restController,
+            ClusterSettings clusterSettings,
+            IndexScopedSettings indexScopedSettings,
+            SettingsFilter settingsFilter,
+            IndexNameExpressionResolver indexNameExpressionResolver,
+            Supplier<DiscoveryNodes> nodesInCluster
+    ) {
+        return List
+                .of(
+                        new RestChatAction()
                 );
     }
 

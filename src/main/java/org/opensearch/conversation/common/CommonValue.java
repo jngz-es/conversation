@@ -1,8 +1,10 @@
 package org.opensearch.conversation.common;
 
-import static org.opensearch.conversation.input.CreateConversationInput.MODEL_ID_FIELD;
-import static org.opensearch.conversation.input.CreateConversationInput.USER_ID_FIELD;
-import static org.opensearch.conversation.response.CreateConversationResponse.SESSION_ID_FIELD;
+import org.opensearch.conversation.response.ChatResponse;
+
+import static org.opensearch.conversation.input.ChatInput.MODEL_ID_FIELD;
+import static org.opensearch.conversation.response.ChatResponse.ANSWER_FIELD;
+import static org.opensearch.conversation.response.ChatResponse.SESSION_ID_FIELD;
 
 public class CommonValue {
 
@@ -16,8 +18,8 @@ public class CommonValue {
     public static final Integer MESSAGE_INDEX_SCHEMA_VERSION = 1;
     public static final String CREATED_TIME_FIELD = "created_time";
     public static final String LAST_UPDATED_TIME_FIELD = "last_updated_time";
-    public static final String QUESTION = "question";
-    public static final String ANSWER = "answer";
+    public static final String SESSION_TITLE_FIELD = "title";
+    public static final String QUESTION_FIELD = "question";
 
     public static final String USER_FIELD_MAPPING = "      \""
             + "user"
@@ -36,11 +38,11 @@ public class CommonValue {
             + "},\n"
             + "    \"properties\": {\n"
             + "      \""
-            + USER_ID_FIELD
-            + "\": {\"type\": \"keyword\"},\n"
-            + "      \""
             + MODEL_ID_FIELD
             + "\" : {\"type\": \"keyword\"},\n"
+            + "      \""
+            + SESSION_TITLE_FIELD
+            + "\" : {\"type\": \"text\"},\n"
             + "      \""
             + CREATED_TIME_FIELD
             + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
@@ -57,19 +59,13 @@ public class CommonValue {
             + "},\n"
             + "    \"properties\": {\n"
             + "      \""
-            + USER_ID_FIELD
-            + "\": {\"type\": \"keyword\"},\n"
-            + "      \""
             + SESSION_ID_FIELD
             + "\": {\"type\": \"keyword\"},\n"
             + "      \""
-            + MODEL_ID_FIELD
-            + "\" : {\"type\": \"keyword\"},\n"
-            + "      \""
-            + QUESTION
+            + QUESTION_FIELD
             + "\" : {\"type\": \"text\"},\n"
             + "      \""
-            + ANSWER
+            + ANSWER_FIELD
             + "\" : {\"type\": \"text\"},\n"
             + "      \""
             + CREATED_TIME_FIELD
