@@ -9,7 +9,6 @@ import org.opensearch.action.support.ActionFilters;
 import org.opensearch.action.support.HandledTransportAction;
 import org.opensearch.action.support.WriteRequest;
 import org.opensearch.client.Client;
-import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.inject.Inject;
 import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.conversation.input.ChatInput;
@@ -28,19 +27,18 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
 import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
 import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
+import static org.opensearch.conversation.common.CommonValue.MODEL_ID_FIELD;
 import static org.opensearch.conversation.common.CommonValue.QUESTION_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
 import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
 import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
-import static org.opensearch.conversation.input.ChatInput.MODEL_ID_FIELD;
-import static org.opensearch.conversation.input.ChatInput.SESSION_ID_FIELD;
-import static org.opensearch.conversation.response.ChatResponse.ANSWER_FIELD;
 
 @Log4j2
 public class TransportChatAction extends HandledTransportAction<ActionRequest, ChatResponse> {
     private final TransportService transportService;
-    private final ClusterService clusterService;
     private final OpensearchIndicesHandler indicesHandler;
     private final Client client;
     private final MachineLearningNodeClient mlClient;
@@ -49,13 +47,11 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
     public TransportChatAction(
             TransportService transportService,
             ActionFilters actionFilters,
-            ClusterService clusterService,
             OpensearchIndicesHandler indicesHandler,
             Client client
     ) {
         super(ChatAction.NAME, transportService, actionFilters, ChatRequest::new);
         this.transportService = transportService;
-        this.clusterService = clusterService;
         this.indicesHandler = indicesHandler;
         this.client = client;
         mlClient = new MachineLearningNodeClient(this.client);
@@ -119,7 +115,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                     try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
                         ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
                             log.info("Messages have been saved into index, result:{}, session id: {}", r.getResult(), sessionId.get());
-                            ChatResponse response = new ChatResponse(sessionId.get(), answer);
+                            ChatResponse response = ChatResponse.builder().sessionId(sessionId.get()).answer(answer).build();
                             listener.onResponse(response);
                         }, e -> { listener.onFailure(e); });
 

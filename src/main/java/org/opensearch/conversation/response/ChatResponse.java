@@ -1,5 +1,8 @@
 package org.opensearch.conversation.response;
 
+import lombok.Builder;
+import lombok.Getter;
+import lombok.ToString;
 import org.opensearch.action.ActionResponse;
 import org.opensearch.common.io.stream.StreamInput;
 import org.opensearch.common.io.stream.StreamOutput;
@@ -8,13 +11,16 @@ import org.opensearch.core.xcontent.XContentBuilder;
 
 import java.io.IOException;
 
-public class ChatResponse extends ActionResponse implements ToXContentObject {
-    public static final String SESSION_ID_FIELD = "session_id";
-    public static final String ANSWER_FIELD = "answer";
+import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
 
+@Getter
+@ToString
+public class ChatResponse extends ActionResponse implements ToXContentObject {
     private String sessionId;
     private String answer;
 
+    @Builder
     public ChatResponse(String sessionId, String answer) {
         this.sessionId = sessionId;
         this.answer = answer;

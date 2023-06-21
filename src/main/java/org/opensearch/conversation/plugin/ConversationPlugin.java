@@ -21,11 +21,15 @@ import org.opensearch.common.settings.IndexScopedSettings;
 import org.opensearch.common.settings.Settings;
 import org.opensearch.common.settings.SettingsFilter;
 import org.opensearch.conversation.action.TransportChatAction;
+import org.opensearch.conversation.action.TransportGetSessionListAction;
 import org.opensearch.conversation.rest.RestChatAction;
+import org.opensearch.conversation.rest.RestGetSessionListAction;
 import org.opensearch.conversation.transport.ChatAction;
+import org.opensearch.conversation.transport.GetSessionListAction;
 import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.env.Environment;
 import org.opensearch.env.NodeEnvironment;
+import org.opensearch.ml.common.transport.model.MLModelGetAction;
 import org.opensearch.plugins.ActionPlugin;
 import org.opensearch.plugins.Plugin;
 import org.opensearch.repositories.RepositoriesService;
@@ -45,7 +49,8 @@ public class ConversationPlugin extends Plugin implements ActionPlugin {
     public List<ActionHandler<? extends ActionRequest, ? extends ActionResponse>> getActions() {
         return List
                 .of(
-                        new ActionHandler<>(ChatAction.INSTANCE, TransportChatAction.class)
+                        new ActionHandler<>(ChatAction.INSTANCE, TransportChatAction.class),
+                        new ActionHandler<>(GetSessionListAction.INSTANCE, TransportGetSessionListAction.class)
                 );
     }
 
@@ -61,7 +66,8 @@ public class ConversationPlugin extends Plugin implements ActionPlugin {
     ) {
         return List
                 .of(
-                        new RestChatAction()
+                        new RestChatAction(),
+                        new RestGetSessionListAction()
                 );
     }
 

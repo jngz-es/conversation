@@ -11,7 +11,6 @@ import org.opensearch.common.io.stream.InputStreamStreamInput;
 import org.opensearch.common.io.stream.OutputStreamStreamOutput;
 import org.opensearch.common.io.stream.StreamInput;
 import org.opensearch.common.io.stream.StreamOutput;
-import org.opensearch.conversation.input.ChatInput;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,24 +22,27 @@ import static org.opensearch.action.ValidateActions.addValidationError;
 @Getter
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @ToString
-public class ChatRequest extends ActionRequest {
-    private ChatInput chatInput;
+public class GetSessionListRequest extends ActionRequest {
+    private int from;
+    private int size;
 
     @Builder
-    public ChatRequest(ChatInput chatInput) {
-        this.chatInput = chatInput;
+    public GetSessionListRequest(int from, int size) {
+        this.from = from;
+        this.size = size;
     }
 
-    public ChatRequest(StreamInput in) throws IOException {
+    public GetSessionListRequest(StreamInput in) throws IOException {
         super(in);
-        this.chatInput = new ChatInput(in);
+        this.from = in.readInt();
+        this.size = in.readInt();
     }
 
     @Override
     public ActionRequestValidationException validate() {
         ActionRequestValidationException exception = new ActionRequestValidationException();
-        if (chatInput == null) {
-            exception = addValidationError("Chat input can't be null", exception);
+        if (from <= 0 || size <= 0) {
+            exception = addValidationError("from and size can not be less than or equal to 0", exception);
         }
 
         return exception;
@@ -49,22 +51,23 @@ public class ChatRequest extends ActionRequest {
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
-        this.chatInput.writeTo(out);
+        out.writeInt(from);
+        out.writeInt(size);
     }
 
-    public static ChatRequest fromActionRequest(ActionRequest actionRequest) {
-        if (actionRequest instanceof ChatRequest) {
-            return (ChatRequest) actionRequest;
+    public static GetSessionListRequest fromActionRequest(ActionRequest actionRequest) {
+        if (actionRequest instanceof GetSessionListRequest) {
+            return (GetSessionListRequest) actionRequest;
         }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              OutputStreamStreamOutput osso = new OutputStreamStreamOutput(baos)) {
             actionRequest.writeTo(osso);
             try (StreamInput input = new InputStreamStreamInput(new ByteArrayInputStream(baos.toByteArray()))) {
-                return new ChatRequest(input);
+                return new GetSessionListRequest(input);
             }
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to parse ActionRequest into ChatRequest", e);
+            throw new UncheckedIOException("Failed to parse ActionRequest into GetSessionListRequest", e);
         }
     }
 }

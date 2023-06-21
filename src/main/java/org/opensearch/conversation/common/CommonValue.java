@@ -1,11 +1,5 @@
 package org.opensearch.conversation.common;
 
-import org.opensearch.conversation.response.ChatResponse;
-
-import static org.opensearch.conversation.input.ChatInput.MODEL_ID_FIELD;
-import static org.opensearch.conversation.response.ChatResponse.ANSWER_FIELD;
-import static org.opensearch.conversation.response.ChatResponse.SESSION_ID_FIELD;
-
 public class CommonValue {
 
     public static final String SESSION_METADATA_INDEX = ".plugins-conversation-session-metadata";
@@ -20,6 +14,11 @@ public class CommonValue {
     public static final String LAST_UPDATED_TIME_FIELD = "last_updated_time";
     public static final String SESSION_TITLE_FIELD = "title";
     public static final String QUESTION_FIELD = "question";
+    public static final String SESSION_ID_FIELD = "session_id";
+    public static final String ANSWER_FIELD = "answer";
+    public static final String MODEL_ID_FIELD = "model_id";
+    public static final String ML_PARAMETERS_FIELD = "parameters";
+    public static final String SESSIONS_FIELD = "sessions";
 
     public static final String USER_FIELD_MAPPING = "      \""
             + "user"
@@ -76,4 +75,10 @@ public class CommonValue {
             + USER_FIELD_MAPPING
             + "    }\n"
             + "}";
+
+    public static final String MATCH_ALL_QUERY = "{\n" +
+            "  \"query\": {\n" +
+            "    \"match_all\": {}\n" +
+            "  }\n" +
+            "}";
 }

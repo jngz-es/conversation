@@ -14,13 +14,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken;
-import static org.opensearch.conversation.response.ChatResponse.ANSWER_FIELD;
+import static org.opensearch.conversation.common.CommonValue.ML_PARAMETERS_FIELD;
+import static org.opensearch.conversation.common.CommonValue.MODEL_ID_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
 
 @Data
 public class ChatInput implements ToXContentObject, Writeable {
-    public static final String SESSION_ID_FIELD = "session_id";
-    public static final String MODEL_ID_FIELD = "model_id";
-    public static final String ML_PARAMETERS_FIELD = "parameters";
 
     private String sessionId;
     private String modelId;
