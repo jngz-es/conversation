@@ -20,35 +20,41 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
+import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
 import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSIONS_FIELD;
+import static org.opensearch.conversation.common.CommonValue.QUESTION_FIELD;
 import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
+import static org.opensearch.conversation.common.CommonValue.STEPS_FIELD;
 
 @Getter
 @ToString
-public class GetSessionListResponse extends ActionResponse implements ToXContentObject {
+public class GetSessionHistoryResponse extends ActionResponse implements ToXContentObject {
 
-    private List<Element> sessions;
+    private String sessionId;
+    private List<Element> steps;
 
     @Builder
-    public GetSessionListResponse(List<Element> sessions) {
-        this.sessions = sessions;
+    public GetSessionHistoryResponse(String sessionId, List<Element> steps) {
+        this.sessionId = sessionId;
+        this.steps = steps;
     }
 
-    public GetSessionListResponse(StreamInput in) throws IOException {
-        this.sessions = in.readList(Element::new);
+    public GetSessionHistoryResponse(StreamInput in) throws IOException {
+        this.sessionId = in.readString();
+        this.steps = in.readList(Element::new);
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        out.writeList(sessions);
+        out.writeString(sessionId);
+        out.writeList(steps);
     }
 
     @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject();
-        builder.field(SESSIONS_FIELD, sessions);
+        builder.field(SESSION_ID_FIELD, sessionId);
+        builder.field(STEPS_FIELD, steps);
         builder.endObject();
         return builder;
     }
@@ -56,35 +62,35 @@ public class GetSessionListResponse extends ActionResponse implements ToXContent
     @Data
     public static class Element implements ToXContentObject, Writeable {
 
-        private String sessionId;
-        private String title;
+        private String question;
+        private String answer;
         private Instant createdTime;
 
         @Builder(toBuilder = true)
-        public Element(String sessionId, String title, Instant createdTime) {
-            this.sessionId = sessionId;
-            this.title = title;
+        public Element(String question, String answer, Instant createdTime) {
+            this.question = question;
+            this.answer = answer;
             this.createdTime = createdTime;
         }
 
         public Element(StreamInput input) throws IOException {
-            this.sessionId = input.readString();
-            this.title = input.readString();
+            this.question = input.readString();
+            this.answer = input.readString();
             this.createdTime = input.readInstant();
         }
 
         @Override
         public void writeTo(StreamOutput out) throws IOException {
-            out.writeString(sessionId);
-            out.writeString(title);
+            out.writeString(question);
+            out.writeString(answer);
             out.writeInstant(createdTime);
         }
 
         @Override
         public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
             builder.startObject();
-            builder.field(SESSION_ID_FIELD, sessionId);
-            builder.field(SESSION_TITLE_FIELD, sessionId);
+            builder.field(QUESTION_FIELD, question);
+            builder.field(ANSWER_FIELD, answer);
             builder.field(CREATED_TIME_FIELD, createdTime.toEpochMilli());
             builder.endObject();
             return builder;

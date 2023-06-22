@@ -16,7 +16,6 @@ import org.opensearch.common.io.stream.InputStreamStreamInput;
 import org.opensearch.common.io.stream.OutputStreamStreamOutput;
 import org.opensearch.common.io.stream.StreamInput;
 import org.opensearch.common.io.stream.StreamOutput;
-import org.opensearch.conversation.input.ChatInput;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,24 +27,32 @@ import static org.opensearch.action.ValidateActions.addValidationError;
 @Getter
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @ToString
-public class ChatRequest extends ActionRequest {
-    private ChatInput chatInput;
+public class GetSessionHistoryRequest extends ActionRequest {
+    private String sessionId;
+    private int from;
+    private int size;
 
     @Builder
-    public ChatRequest(ChatInput chatInput) {
-        this.chatInput = chatInput;
+    public GetSessionHistoryRequest(String sessionId, int from, int size) {
+        this.sessionId = sessionId;
+        this.from = from;
+        this.size = size;
     }
 
-    public ChatRequest(StreamInput in) throws IOException {
+    public GetSessionHistoryRequest(StreamInput in) throws IOException {
         super(in);
-        this.chatInput = new ChatInput(in);
+        this.sessionId = in.readString();
+        this.from = in.readInt();
+        this.size = in.readInt();
     }
 
     @Override
     public ActionRequestValidationException validate() {
         ActionRequestValidationException exception = new ActionRequestValidationException();
-        if (chatInput == null) {
-            exception = addValidationError("Chat input can't be null", exception);
+        if (sessionId.isEmpty()) {
+            exception = addValidationError("session id can not be empty", exception);
+        } else if (from <= 0 || size <= 0) {
+            exception = addValidationError("from and size can not be less than or equal to 0", exception);
         }
 
         return exception;
@@ -54,22 +61,24 @@ public class ChatRequest extends ActionRequest {
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
-        this.chatInput.writeTo(out);
+        out.writeString(sessionId);
+        out.writeInt(from);
+        out.writeInt(size);
     }
 
-    public static ChatRequest fromActionRequest(ActionRequest actionRequest) {
-        if (actionRequest instanceof ChatRequest) {
-            return (ChatRequest) actionRequest;
+    public static GetSessionHistoryRequest fromActionRequest(ActionRequest actionRequest) {
+        if (actionRequest instanceof GetSessionHistoryRequest) {
+            return (GetSessionHistoryRequest) actionRequest;
         }
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              OutputStreamStreamOutput osso = new OutputStreamStreamOutput(baos)) {
             actionRequest.writeTo(osso);
             try (StreamInput input = new InputStreamStreamInput(new ByteArrayInputStream(baos.toByteArray()))) {
-                return new ChatRequest(input);
+                return new GetSessionHistoryRequest(input);
             }
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to parse ActionRequest into ChatRequest", e);
+            throw new UncheckedIOException("Failed to parse ActionRequest into GetSessionHistoryRequest", e);
         }
     }
 }

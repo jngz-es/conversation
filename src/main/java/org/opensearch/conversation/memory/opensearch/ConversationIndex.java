@@ -1,3 +1,8 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.opensearch.conversation.memory.opensearch;
 
 import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;

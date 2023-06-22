@@ -1,3 +1,8 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.opensearch.conversation.common;
 
 public class CommonValue {
@@ -19,6 +24,7 @@ public class CommonValue {
     public static final String MODEL_ID_FIELD = "model_id";
     public static final String ML_PARAMETERS_FIELD = "parameters";
     public static final String SESSIONS_FIELD = "sessions";
+    public static final String STEPS_FIELD = "steps";
 
     public static final String USER_FIELD_MAPPING = "      \""
             + "user"
