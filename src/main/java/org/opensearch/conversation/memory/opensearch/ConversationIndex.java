@@ -7,8 +7,8 @@ package org.opensearch.conversation.memory.opensearch;
 
 import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
 import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX_SCHEMA_VERSION;
-import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX_SCHEMA_VERSION;
 import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
+import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX_SCHEMA_VERSION;
 
 public enum ConversationIndex {
     METADATA(SESSION_METADATA_INDEX, false, SESSION_METADATA_INDEX, SESSION_METADATA_INDEX_SCHEMA_VERSION),

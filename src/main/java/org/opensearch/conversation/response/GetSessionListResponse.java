@@ -5,25 +5,26 @@
 
 package org.opensearch.conversation.response;
 
+import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSIONS_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.ToString;
+
 import org.opensearch.action.ActionResponse;
 import org.opensearch.common.io.stream.StreamInput;
 import org.opensearch.common.io.stream.StreamOutput;
 import org.opensearch.common.io.stream.Writeable;
 import org.opensearch.core.xcontent.ToXContentObject;
 import org.opensearch.core.xcontent.XContentBuilder;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.util.List;
-
-import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSIONS_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
 
 @Getter
 @ToString

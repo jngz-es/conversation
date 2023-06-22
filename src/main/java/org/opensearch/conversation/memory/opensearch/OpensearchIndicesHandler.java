@@ -5,10 +5,21 @@
 
 package org.opensearch.conversation.memory.opensearch;
 
+import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
+import static org.opensearch.conversation.common.CommonValue.META;
+import static org.opensearch.conversation.common.CommonValue.NO_SCHEMA_VERSION;
+import static org.opensearch.conversation.common.CommonValue.SCHEMA_VERSION_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.admin.indices.create.CreateIndexRequest;
 import org.opensearch.action.admin.indices.create.CreateIndexResponse;
@@ -18,18 +29,7 @@ import org.opensearch.cluster.metadata.IndexMetadata;
 import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.common.xcontent.XContentType;
-import org.opensearch.ml.common.CommonValue;
 import org.opensearch.ml.common.exception.MLException;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
-import static org.opensearch.conversation.common.CommonValue.META;
-import static org.opensearch.conversation.common.CommonValue.NO_SCHEMA_VERSION;
-import static org.opensearch.conversation.common.CommonValue.SCHEMA_VERSION_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
 
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
@@ -78,23 +78,22 @@ public class OpensearchIndicesHandler {
                     shouldUpdateIndex(indexName, index.getVersion(), ActionListener.wrap(r -> {
                         if (r) {
                             // return true if should update index
-                            client
-                                    .admin()
-                                    .indices()
-                                    .putMapping(
-                                            new PutMappingRequest().indices(indexName).source(mapping, XContentType.JSON),
-                                            ActionListener.wrap(response -> {
-                                                if (response.isAcknowledged()) {
-                                                    indexMappingUpdated.get(indexName).set(true);
-                                                    internalListener.onResponse(true);
-                                                } else {
-                                                    internalListener.onFailure(new MLException("Failed to update index: " + indexName));
-                                                }
-                                            }, exception -> {
-                                                log.error("Failed to update index " + indexName, exception);
-                                                internalListener.onFailure(exception);
-                                            })
-                                    );
+                            client.admin()
+                                .indices()
+                                .putMapping(
+                                    new PutMappingRequest().indices(indexName).source(mapping, XContentType.JSON),
+                                    ActionListener.wrap(response -> {
+                                        if (response.isAcknowledged()) {
+                                            indexMappingUpdated.get(indexName).set(true);
+                                            internalListener.onResponse(true);
+                                        } else {
+                                            internalListener.onFailure(new MLException("Failed to update index: " + indexName));
+                                        }
+                                    }, exception -> {
+                                        log.error("Failed to update index " + indexName, exception);
+                                        internalListener.onFailure(exception);
+                                    })
+                                );
                         } else {
                             // no need to update index if it does not exist or the version is already up-to-date.
                             indexMappingUpdated.get(indexName).set(true);

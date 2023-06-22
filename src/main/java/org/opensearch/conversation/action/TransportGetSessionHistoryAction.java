@@ -5,9 +5,21 @@
 
 package org.opensearch.conversation.action;
 
+import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
+import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
+import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
+import static org.opensearch.conversation.common.CommonValue.QUESTION_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.ActionRequest;
 import org.opensearch.action.search.SearchRequest;
@@ -29,17 +41,6 @@ import org.opensearch.search.sort.SortOrder;
 import org.opensearch.tasks.Task;
 import org.opensearch.transport.TransportService;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
-import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
-import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
-import static org.opensearch.conversation.common.CommonValue.QUESTION_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
-
 @Log4j2
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class TransportGetSessionHistoryAction extends HandledTransportAction<ActionRequest, GetSessionHistoryResponse> {
@@ -50,11 +51,11 @@ public class TransportGetSessionHistoryAction extends HandledTransportAction<Act
 
     @Inject
     public TransportGetSessionHistoryAction(
-            TransportService transportService,
-            ActionFilters actionFilters,
-            OpensearchIndicesHandler indicesHandler,
-            Client client,
-            NamedXContentRegistry xContentRegistry
+        TransportService transportService,
+        ActionFilters actionFilters,
+        OpensearchIndicesHandler indicesHandler,
+        Client client,
+        NamedXContentRegistry xContentRegistry
     ) {
         super(GetSessionListAction.NAME, transportService, actionFilters, GetSessionListRequest::new);
         this.transportService = transportService;
@@ -71,7 +72,7 @@ public class TransportGetSessionHistoryAction extends HandledTransportAction<Act
         int size = getSessionHistoryRequest.getSize();
 
         try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
-            //TODO: scroll search here
+            // TODO: scroll search here
             TermQueryBuilder termQueryBuilder = new TermQueryBuilder(SESSION_ID_FIELD, sessionId);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder.from(from);
@@ -91,7 +92,9 @@ public class TransportGetSessionHistoryAction extends HandledTransportAction<Act
                         String question = (String) sourceAsMap.get(QUESTION_FIELD);
                         String answer = (String) sourceAsMap.get(ANSWER_FIELD);
                         Instant createdTime = (Instant) sourceAsMap.get(CREATED_TIME_FIELD);
-                        steps.add(GetSessionHistoryResponse.Element.builder().question(question).answer(answer).createdTime(createdTime).build());
+                        steps.add(
+                            GetSessionHistoryResponse.Element.builder().question(question).answer(answer).createdTime(createdTime).build()
+                        );
                     }
                     listener.onResponse(GetSessionHistoryResponse.builder().sessionId(sessionId).steps(steps).build());
                 } else {

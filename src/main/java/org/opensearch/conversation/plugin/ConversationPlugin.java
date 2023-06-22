@@ -49,30 +49,24 @@ public class ConversationPlugin extends Plugin implements ActionPlugin {
 
     @Override
     public List<ActionHandler<? extends ActionRequest, ? extends ActionResponse>> getActions() {
-        return List
-                .of(
-                        new ActionHandler<>(ChatAction.INSTANCE, TransportChatAction.class),
-                        new ActionHandler<>(GetSessionListAction.INSTANCE, TransportGetSessionListAction.class),
-                        new ActionHandler<>(GetSessionHistoryAction.INSTANCE, TransportGetSessionHistoryAction.class)
-                );
+        return List.of(
+            new ActionHandler<>(ChatAction.INSTANCE, TransportChatAction.class),
+            new ActionHandler<>(GetSessionListAction.INSTANCE, TransportGetSessionListAction.class),
+            new ActionHandler<>(GetSessionHistoryAction.INSTANCE, TransportGetSessionHistoryAction.class)
+        );
     }
 
     @Override
     public List<RestHandler> getRestHandlers(
-            Settings settings,
-            RestController restController,
-            ClusterSettings clusterSettings,
-            IndexScopedSettings indexScopedSettings,
-            SettingsFilter settingsFilter,
-            IndexNameExpressionResolver indexNameExpressionResolver,
-            Supplier<DiscoveryNodes> nodesInCluster
+        Settings settings,
+        RestController restController,
+        ClusterSettings clusterSettings,
+        IndexScopedSettings indexScopedSettings,
+        SettingsFilter settingsFilter,
+        IndexNameExpressionResolver indexNameExpressionResolver,
+        Supplier<DiscoveryNodes> nodesInCluster
     ) {
-        return List
-                .of(
-                        new RestChatAction(),
-                        new RestGetSessionListAction(),
-                        new RestGetSessionHistoryAction()
-                );
+        return List.of(new RestChatAction(), new RestGetSessionListAction(), new RestGetSessionHistoryAction());
     }
 
     @Override

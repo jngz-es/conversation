@@ -27,64 +27,60 @@ public class CommonValue {
     public static final String STEPS_FIELD = "steps";
 
     public static final String USER_FIELD_MAPPING = "      \""
-            + "user"
-            + "\": {\n"
-            + "        \"type\": \"nested\",\n"
-            + "        \"properties\": {\n"
-            + "          \"name\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\", \"ignore_above\":256}}},\n"
-            + "          \"backend_roles\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\"}}},\n"
-            + "          \"roles\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\"}}},\n"
-            + "          \"custom_attribute_names\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\"}}}\n"
-            + "        }\n"
-            + "      }\n";
+        + "user"
+        + "\": {\n"
+        + "        \"type\": \"nested\",\n"
+        + "        \"properties\": {\n"
+        + "          \"name\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\", \"ignore_above\":256}}},\n"
+        + "          \"backend_roles\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\"}}},\n"
+        + "          \"roles\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\"}}},\n"
+        + "          \"custom_attribute_names\": {\"type\":\"text\", \"fields\":{\"keyword\":{\"type\":\"keyword\"}}}\n"
+        + "        }\n"
+        + "      }\n";
     public static final String SESSION_METADATA_INDEX_MAPPING = "{\n"
-            + "    \"_meta\": {\"schema_version\": "
-            + SESSION_METADATA_INDEX_SCHEMA_VERSION
-            + "},\n"
-            + "    \"properties\": {\n"
-            + "      \""
-            + MODEL_ID_FIELD
-            + "\" : {\"type\": \"keyword\"},\n"
-            + "      \""
-            + SESSION_TITLE_FIELD
-            + "\" : {\"type\": \"text\"},\n"
-            + "      \""
-            + CREATED_TIME_FIELD
-            + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
-            + "      \""
-            + LAST_UPDATED_TIME_FIELD
-            + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
-            + USER_FIELD_MAPPING
-            + "    }\n"
-            + "}";
+        + "    \"_meta\": {\"schema_version\": "
+        + SESSION_METADATA_INDEX_SCHEMA_VERSION
+        + "},\n"
+        + "    \"properties\": {\n"
+        + "      \""
+        + MODEL_ID_FIELD
+        + "\" : {\"type\": \"keyword\"},\n"
+        + "      \""
+        + SESSION_TITLE_FIELD
+        + "\" : {\"type\": \"text\"},\n"
+        + "      \""
+        + CREATED_TIME_FIELD
+        + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
+        + "      \""
+        + LAST_UPDATED_TIME_FIELD
+        + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
+        + USER_FIELD_MAPPING
+        + "    }\n"
+        + "}";
 
     public static final String MESSAGE_INDEX_MAPPING = "{\n"
-            + "    \"_meta\": {\"schema_version\": "
-            + MESSAGE_INDEX_SCHEMA_VERSION
-            + "},\n"
-            + "    \"properties\": {\n"
-            + "      \""
-            + SESSION_ID_FIELD
-            + "\": {\"type\": \"keyword\"},\n"
-            + "      \""
-            + QUESTION_FIELD
-            + "\" : {\"type\": \"text\"},\n"
-            + "      \""
-            + ANSWER_FIELD
-            + "\" : {\"type\": \"text\"},\n"
-            + "      \""
-            + CREATED_TIME_FIELD
-            + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
-            + "      \""
-            + LAST_UPDATED_TIME_FIELD
-            + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
-            + USER_FIELD_MAPPING
-            + "    }\n"
-            + "}";
+        + "    \"_meta\": {\"schema_version\": "
+        + MESSAGE_INDEX_SCHEMA_VERSION
+        + "},\n"
+        + "    \"properties\": {\n"
+        + "      \""
+        + SESSION_ID_FIELD
+        + "\": {\"type\": \"keyword\"},\n"
+        + "      \""
+        + QUESTION_FIELD
+        + "\" : {\"type\": \"text\"},\n"
+        + "      \""
+        + ANSWER_FIELD
+        + "\" : {\"type\": \"text\"},\n"
+        + "      \""
+        + CREATED_TIME_FIELD
+        + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
+        + "      \""
+        + LAST_UPDATED_TIME_FIELD
+        + "\": {\"type\": \"date\", \"format\": \"strict_date_time||epoch_millis\"},\n"
+        + USER_FIELD_MAPPING
+        + "    }\n"
+        + "}";
 
-    public static final String MATCH_ALL_QUERY = "{\n" +
-            "  \"query\": {\n" +
-            "    \"match_all\": {}\n" +
-            "  }\n" +
-            "}";
+    public static final String MATCH_ALL_QUERY = "{\n" + "  \"query\": {\n" + "    \"match_all\": {}\n" + "  }\n" + "}";
 }

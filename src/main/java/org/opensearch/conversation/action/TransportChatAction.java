@@ -5,8 +5,23 @@
 
 package org.opensearch.conversation.action;
 
-import com.google.gson.Gson;
+import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
+import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
+import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
+import static org.opensearch.conversation.common.CommonValue.MODEL_ID_FIELD;
+import static org.opensearch.conversation.common.CommonValue.QUESTION_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
+import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
 import lombok.extern.log4j.Log4j2;
+
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.ActionRequest;
 import org.opensearch.action.index.IndexRequest;
@@ -23,7 +38,6 @@ import org.opensearch.conversation.input.ChatInput;
 import org.opensearch.conversation.memory.opensearch.OpensearchIndicesHandler;
 import org.opensearch.conversation.request.ChatRequest;
 import org.opensearch.conversation.response.ChatResponse;
-import org.opensearch.conversation.response.GetSessionHistoryResponse;
 import org.opensearch.conversation.transport.ChatAction;
 import org.opensearch.index.query.TermQueryBuilder;
 import org.opensearch.ml.client.MachineLearningNodeClient;
@@ -36,20 +50,7 @@ import org.opensearch.search.sort.SortOrder;
 import org.opensearch.tasks.Task;
 import org.opensearch.transport.TransportService;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
-import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
-import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
-import static org.opensearch.conversation.common.CommonValue.MODEL_ID_FIELD;
-import static org.opensearch.conversation.common.CommonValue.QUESTION_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
-import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
+import com.google.gson.Gson;
 
 @Log4j2
 public class TransportChatAction extends HandledTransportAction<ActionRequest, ChatResponse> {
@@ -60,10 +61,10 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
 
     @Inject
     public TransportChatAction(
-            TransportService transportService,
-            ActionFilters actionFilters,
-            OpensearchIndicesHandler indicesHandler,
-            Client client
+        TransportService transportService,
+        ActionFilters actionFilters,
+        OpensearchIndicesHandler indicesHandler,
+        Client client
     ) {
         super(ChatAction.NAME, transportService, actionFilters, ChatRequest::new);
         this.transportService = transportService;
@@ -80,7 +81,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
             throw new IllegalArgumentException("The model id is required.");
         }
 
-        //Get most recent 20 rounds of session history
+        // Get most recent 20 rounds of session history
         List<String> historicalMessages = new ArrayList<>();
         if (!Strings.isNullOrEmpty(chatInput.getSessionId())) {
             int sz = 20;
@@ -96,7 +97,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                     log.debug("Completed search request to get most recent 20 rounds of session history.");
                     SearchHit[] hits = r.getHits().getHits();
                     if (hits != null && hits.length > 0) {
-                        for (int i = Math.min(hits.length, sz)-1; i >= 0; i--) {
+                        for (int i = Math.min(hits.length, sz) - 1; i >= 0; i--) {
                             SearchHit hit = hits[i];
                             Map<String, Object> sourceAsMap = hit.getSourceAsMap();
                             String question = (String) sourceAsMap.get(QUESTION_FIELD);
@@ -134,16 +135,25 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                         try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
                             ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
                                 sessionId.set(r.getId());
-                                log.info("Session meta has been saved into index, result:{}, session id: {}", r.getResult(), sessionId.get());
-                            }, e -> {
-                                listener.onFailure(e);
-                            });
+                                log.info(
+                                    "Session meta has been saved into index, result:{}, session id: {}",
+                                    r.getResult(),
+                                    sessionId.get()
+                                );
+                            }, e -> { listener.onFailure(e); });
 
                             IndexRequest indexRequest = new IndexRequest(SESSION_METADATA_INDEX);
                             String title = chatInput.getParameters().get(QUESTION_FIELD);
-                            indexRequest.source(Map.of(SESSION_TITLE_FIELD, title,
-                                    MODEL_ID_FIELD, chatInput.getModelId(),
-                                    CREATED_TIME_FIELD, Instant.now().toEpochMilli()));
+                            indexRequest.source(
+                                Map.of(
+                                    SESSION_TITLE_FIELD,
+                                    title,
+                                    MODEL_ID_FIELD,
+                                    chatInput.getModelId(),
+                                    CREATED_TIME_FIELD,
+                                    Instant.now().toEpochMilli()
+                                )
+                            );
                             indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
                             client.index(indexRequest, ActionListener.runBefore(indexResponseListener, () -> context.restore()));
                         } catch (Exception e) {
@@ -171,10 +181,18 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                         }, e -> { listener.onFailure(e); });
 
                         IndexRequest indexRequest = new IndexRequest(MESSAGE_INDEX);
-                        indexRequest.source(Map.of(SESSION_ID_FIELD, sessionId.get(),
-                                QUESTION_FIELD, chatInput.getParameters().get(QUESTION_FIELD),
-                                ANSWER_FIELD, answer,
-                                CREATED_TIME_FIELD, Instant.now().toEpochMilli()));
+                        indexRequest.source(
+                            Map.of(
+                                SESSION_ID_FIELD,
+                                sessionId.get(),
+                                QUESTION_FIELD,
+                                chatInput.getParameters().get(QUESTION_FIELD),
+                                ANSWER_FIELD,
+                                answer,
+                                CREATED_TIME_FIELD,
+                                Instant.now().toEpochMilli()
+                            )
+                        );
                         indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
                         client.index(indexRequest, ActionListener.runBefore(indexResponseListener, () -> context.restore()));
                     } catch (Exception e) {
@@ -193,10 +211,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                 log.error("Failed to chat ", e);
                 listener.onFailure(e);
             }
-        }, e -> {
-                listener.onFailure(e);
-        }));
-
+        }, e -> { listener.onFailure(e); }));
 
     }
 }

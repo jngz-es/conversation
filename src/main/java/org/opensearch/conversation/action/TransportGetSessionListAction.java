@@ -5,9 +5,21 @@
 
 package org.opensearch.conversation.action;
 
+import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
+import static org.opensearch.conversation.common.CommonValue.MATCH_ALL_QUERY;
+import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
+import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.ActionRequest;
 import org.opensearch.action.search.SearchRequest;
@@ -30,17 +42,6 @@ import org.opensearch.search.sort.SortOrder;
 import org.opensearch.tasks.Task;
 import org.opensearch.transport.TransportService;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
-import static org.opensearch.conversation.common.CommonValue.MATCH_ALL_QUERY;
-import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
-import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
-
 @Log4j2
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class TransportGetSessionListAction extends HandledTransportAction<ActionRequest, GetSessionListResponse> {
@@ -51,11 +52,11 @@ public class TransportGetSessionListAction extends HandledTransportAction<Action
 
     @Inject
     public TransportGetSessionListAction(
-            TransportService transportService,
-            ActionFilters actionFilters,
-            OpensearchIndicesHandler indicesHandler,
-            Client client,
-            NamedXContentRegistry xContentRegistry
+        TransportService transportService,
+        ActionFilters actionFilters,
+        OpensearchIndicesHandler indicesHandler,
+        Client client,
+        NamedXContentRegistry xContentRegistry
     ) {
         super(GetSessionListAction.NAME, transportService, actionFilters, GetSessionListRequest::new);
         this.transportService = transportService;
@@ -71,11 +72,12 @@ public class TransportGetSessionListAction extends HandledTransportAction<Action
         int size = getSessionListRequest.getSize();
 
         try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
-            //TODO: scroll search here
+            // TODO: scroll search here
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder.from(from);
             searchSourceBuilder.size(size);
-            XContentParser queryParser = XContentType.JSON.xContent().createParser(xContentRegistry, LoggingDeprecationHandler.INSTANCE, MATCH_ALL_QUERY);
+            XContentParser queryParser = XContentType.JSON.xContent()
+                .createParser(xContentRegistry, LoggingDeprecationHandler.INSTANCE, MATCH_ALL_QUERY);
             searchSourceBuilder.parseXContent(queryParser);
             searchSourceBuilder.sort(CREATED_TIME_FIELD, SortOrder.ASC);
             SearchRequest searchRequest = new SearchRequest(SESSION_METADATA_INDEX).source(searchSourceBuilder);
@@ -91,7 +93,9 @@ public class TransportGetSessionListAction extends HandledTransportAction<Action
                         Map<String, Object> sourceAsMap = hit.getSourceAsMap();
                         String title = (String) sourceAsMap.get(SESSION_TITLE_FIELD);
                         Instant createdTime = (Instant) sourceAsMap.get(CREATED_TIME_FIELD);
-                        sessions.add(GetSessionListResponse.Element.builder().sessionId(sessionId).title(title).createdTime(createdTime).build());
+                        sessions.add(
+                            GetSessionListResponse.Element.builder().sessionId(sessionId).title(title).createdTime(createdTime).build()
+                        );
                     }
                     listener.onResponse(GetSessionListResponse.builder().sessions(sessions).build());
                 } else {

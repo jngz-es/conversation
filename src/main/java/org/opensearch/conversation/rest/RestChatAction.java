@@ -5,6 +5,13 @@
 
 package org.opensearch.conversation.rest;
 
+import static org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken;
+import static org.opensearch.conversation.plugin.ConversationPlugin.CONVERSATION_BASE_URI;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+
 import org.opensearch.client.node.NodeClient;
 import org.opensearch.conversation.input.ChatInput;
 import org.opensearch.conversation.request.ChatRequest;
@@ -13,13 +20,6 @@ import org.opensearch.core.xcontent.XContentParser;
 import org.opensearch.rest.BaseRestHandler;
 import org.opensearch.rest.RestRequest;
 import org.opensearch.rest.action.RestToXContentListener;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-
-import static org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken;
-import static org.opensearch.conversation.plugin.ConversationPlugin.CONVERSATION_BASE_URI;
 
 public class RestChatAction extends BaseRestHandler {
     private static final String CREATE_SESSION_ACTION = "chat_action";

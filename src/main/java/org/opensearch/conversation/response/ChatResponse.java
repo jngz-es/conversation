@@ -5,19 +5,20 @@
 
 package org.opensearch.conversation.response;
 
+import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
+
+import java.io.IOException;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+
 import org.opensearch.action.ActionResponse;
 import org.opensearch.common.io.stream.StreamInput;
 import org.opensearch.common.io.stream.StreamOutput;
 import org.opensearch.core.xcontent.ToXContentObject;
 import org.opensearch.core.xcontent.XContentBuilder;
-
-import java.io.IOException;
-
-import static org.opensearch.conversation.common.CommonValue.ANSWER_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
 
 @Getter
 @ToString

@@ -5,23 +5,24 @@
 
 package org.opensearch.conversation.input;
 
+import static org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken;
+import static org.opensearch.conversation.common.CommonValue.ML_PARAMETERS_FIELD;
+import static org.opensearch.conversation.common.CommonValue.MODEL_ID_FIELD;
+import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.Builder;
 import lombok.Data;
+
 import org.opensearch.common.io.stream.StreamInput;
 import org.opensearch.common.io.stream.StreamOutput;
 import org.opensearch.common.io.stream.Writeable;
 import org.opensearch.core.xcontent.ToXContentObject;
 import org.opensearch.core.xcontent.XContentBuilder;
 import org.opensearch.core.xcontent.XContentParser;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.opensearch.common.xcontent.XContentParserUtils.ensureExpectedToken;
-import static org.opensearch.conversation.common.CommonValue.ML_PARAMETERS_FIELD;
-import static org.opensearch.conversation.common.CommonValue.MODEL_ID_FIELD;
-import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
 
 @Data
 public class ChatInput implements ToXContentObject, Writeable {
