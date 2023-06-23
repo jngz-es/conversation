@@ -139,7 +139,6 @@ dependencies {
     api "org.opensearch:opensearch:${opensearch_version}"
     zipArchive group: 'org.opensearch.plugin', name:'opensearch-ml-plugin', version: "${opensearch_build}"
     api group: 'org.opensearch', name:'opensearch-ml-client', version: "${opensearch_build}"
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.10'
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.9.1'
     // ml-common excluded reflection for runtime so we need to add it by ourselves.
     // https://github.com/opensearch-project/ml-commons/commit/464bfe34c66d7a729a00dd457f03587ea4e504d9

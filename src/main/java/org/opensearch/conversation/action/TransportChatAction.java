@@ -116,7 +116,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
         }
 
         Map<String, String> params = chatInput.getParameters();
-        params.put("history", new Gson().toJson(historicalMessages));
+        params.put("chat_history", new Gson().toJson(historicalMessages));
         RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(params));
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
             String answer = mlOutput.toString();
