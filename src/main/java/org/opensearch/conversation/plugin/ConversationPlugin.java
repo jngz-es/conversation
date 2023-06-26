@@ -23,6 +23,7 @@ import org.opensearch.common.settings.SettingsFilter;
 import org.opensearch.conversation.action.TransportChatAction;
 import org.opensearch.conversation.action.TransportGetSessionHistoryAction;
 import org.opensearch.conversation.action.TransportGetSessionListAction;
+import org.opensearch.conversation.memory.opensearch.OpensearchIndicesHandler;
 import org.opensearch.conversation.rest.RestChatAction;
 import org.opensearch.conversation.rest.RestGetSessionHistoryAction;
 import org.opensearch.conversation.rest.RestGetSessionListAction;
@@ -46,6 +47,8 @@ import org.opensearch.watcher.ResourceWatcherService;
  */
 public class ConversationPlugin extends Plugin implements ActionPlugin {
     public static final String CONVERSATION_BASE_URI = "/_plugins/_conversation";
+
+    private OpensearchIndicesHandler opensearchIndicesHandler;
 
     @Override
     public List<ActionHandler<? extends ActionRequest, ? extends ActionResponse>> getActions() {
@@ -83,6 +86,7 @@ public class ConversationPlugin extends Plugin implements ActionPlugin {
         final IndexNameExpressionResolver indexNameExpressionResolver,
         final Supplier<RepositoriesService> repositoriesServiceSupplier
     ) {
-        return List.of();
+        opensearchIndicesHandler = new OpensearchIndicesHandler(clusterService, client);
+        return List.of(opensearchIndicesHandler);
     }
 }
