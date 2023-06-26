@@ -32,6 +32,7 @@ import org.opensearch.conversation.memory.opensearch.OpensearchIndicesHandler;
 import org.opensearch.conversation.request.GetSessionHistoryRequest;
 import org.opensearch.conversation.request.GetSessionListRequest;
 import org.opensearch.conversation.response.GetSessionHistoryResponse;
+import org.opensearch.conversation.transport.GetSessionHistoryAction;
 import org.opensearch.conversation.transport.GetSessionListAction;
 import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.index.query.TermQueryBuilder;
@@ -57,7 +58,7 @@ public class TransportGetSessionHistoryAction extends HandledTransportAction<Act
         Client client,
         NamedXContentRegistry xContentRegistry
     ) {
-        super(GetSessionListAction.NAME, transportService, actionFilters, GetSessionListRequest::new);
+        super(GetSessionHistoryAction.NAME, transportService, actionFilters, GetSessionHistoryRequest::new);
         this.transportService = transportService;
         this.indicesHandler = indicesHandler;
         this.client = client;
