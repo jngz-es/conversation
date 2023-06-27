@@ -146,47 +146,51 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
             try {
                 Instant now = Instant.now();
                 AtomicReference<String> sessionId = new AtomicReference<>(chatInput.getSessionId());
-                if (Strings.isNullOrEmpty(sessionId.get())) {
-                    log.info("Ingesting session meta index.");
-                    indicesHandler.initSessionMetaIndex(ActionListener.wrap(indexCreated -> {
-                        if (!indexCreated) {
-                            listener.onFailure(new RuntimeException("No response to create session meta index"));
-                            return;
-                        }
-                        try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
-                            ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
-                                sessionId.set(r.getId());
-                                log.info(
-                                    "Session meta has been saved into index, result:{}, session id: {}",
-                                    r.getResult(),
-                                    sessionId.get()
-                                );
-                            }, e -> { listener.onFailure(e); });
 
-                            IndexRequest indexRequest = new IndexRequest(SESSION_METADATA_INDEX);
-                            String title = chatInput.getParameters().get(QUESTION_FIELD);
-                            indexRequest.source(
-                                Map.of(
-                                    SESSION_TITLE_FIELD,
-                                    title,
-                                    MODEL_ID_FIELD,
-                                    chatInput.getModelId(),
-                                    CREATED_TIME_FIELD,
-                                    Instant.now().toEpochMilli()
-                                )
+                log.info("Ingesting session meta index.");
+                indicesHandler.initSessionMetaIndex(ActionListener.wrap(indexCreated -> {
+                    if (!indexCreated) {
+                        listener.onFailure(new RuntimeException("No response to create session meta index"));
+                        return;
+                    }
+                    if (!Strings.isNullOrEmpty(sessionId.get())) {
+                        storeMessage(sessionId.get(), chatInput.getParameters().get(QUESTION_FIELD), answer, listener);
+                        return;
+                    }
+                    try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
+                        ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
+                            sessionId.set(r.getId());
+                            log.info(
+                                "Session meta has been saved into index, result:{}, session id: {}",
+                                r.getResult(),
+                                sessionId.get()
                             );
-                            indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                            client.index(indexRequest, ActionListener.runBefore(indexResponseListener, () -> context.restore()));
-                        } catch (Exception e) {
-                            log.error("Failed to save session metadata", e);
-                            listener.onFailure(e);
-                        }
-                    }, e -> {
-                        log.error("Failed to ingest session metadata index", e);
-                        listener.onFailure(e);
-                    }));
-                }
+                            storeMessage(sessionId.get(), chatInput.getParameters().get(QUESTION_FIELD), answer, listener);
+                        }, e -> { listener.onFailure(e); });
 
+                        IndexRequest indexRequest = new IndexRequest(SESSION_METADATA_INDEX);
+                        String title = chatInput.getParameters().get(QUESTION_FIELD);
+                        indexRequest.source(
+                            Map.of(
+                                SESSION_TITLE_FIELD,
+                                title,
+                                MODEL_ID_FIELD,
+                                chatInput.getModelId(),
+                                CREATED_TIME_FIELD,
+                                Instant.now().toEpochMilli()
+                            )
+                        );
+                        indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                        client.index(indexRequest, ActionListener.runBefore(indexResponseListener, () -> context.restore()));
+                    } catch (Exception e) {
+                        log.error("Failed to save session metadata", e);
+                        listener.onFailure(e);
+                    }
+                }, e -> {
+                    log.error("Failed to ingest session metadata index", e);
+                    listener.onFailure(e);
+                }));
+/*
                 log.info("Ingesting message index.");
                 indicesHandler.initMessageIndex(ActionListener.wrap(indexCreated -> {
                     if (!indexCreated) {
@@ -228,7 +232,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                     log.error("Failed to ingest messages index", e);
                     listener.onFailure(e);
                 }));
-
+*/
             } catch (IllegalArgumentException illegalArgumentException) {
                 log.error("Failed to chat ", illegalArgumentException);
                 listener.onFailure(illegalArgumentException);
@@ -238,5 +242,49 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
             }
         }, e -> { listener.onFailure(e); }));
 
+    }
+
+    private void storeMessage(String sessionId, String question, String answer, ActionListener<ChatResponse> listener) {
+        log.info("storeMessage start");
+        indicesHandler.initMessageIndex(ActionListener.wrap(indexCreated -> {
+            if (!indexCreated) {
+                listener.onFailure(new RuntimeException("No response to create message index"));
+                return;
+            }
+
+            try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
+                ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
+                    log.info("Messages have been saved into index, result:{}, session id: {}", r.getResult(), sessionId);
+                    ChatResponse response = ChatResponse.builder().sessionId(sessionId).answer(answer).build();
+                    listener.onResponse(response);
+                }, e -> { listener.onFailure(e); });
+
+                IndexRequest indexRequest = new IndexRequest(MESSAGE_INDEX);
+                log.error("[----------------------------------------------------------]");
+                log.error("[-----]session id is ({})", sessionId);
+                log.error("[-----]question is ({})", question);
+                log.error("[-----]answer id is ({})", answer);
+                indexRequest.source(
+                        Map.of(
+                                SESSION_ID_FIELD,
+                                sessionId,
+                                QUESTION_FIELD,
+                                question,
+                                ANSWER_FIELD,
+                                answer,
+                                CREATED_TIME_FIELD,
+                                Instant.now().toEpochMilli()
+                        )
+                );
+                indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+                client.index(indexRequest, ActionListener.runBefore(indexResponseListener, () -> context.restore()));
+            } catch (Exception e) {
+                log.error("Failed to save messages", e);
+                listener.onFailure(e);
+            }
+        }, e -> {
+            log.error("Failed to ingest messages index", e);
+            listener.onFailure(e);
+        }));
     }
 }
