@@ -136,6 +136,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
             BytesStreamOutput bytesStreamOutput = new BytesStreamOutput();
             mlOutput.writeTo(bytesStreamOutput);
             String answer = bytesStreamOutput.toString();
+            log.error("Chat output is : () ", mlOutput);
             log.error("Chat response for input {} is : () ", chatInput, answer);
 
             try {
