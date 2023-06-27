@@ -14,6 +14,7 @@ import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
 import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
 import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
 
+import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.opensearch.action.support.WriteRequest;
 import org.opensearch.client.Client;
 import org.opensearch.common.Strings;
 import org.opensearch.common.inject.Inject;
+import org.opensearch.common.io.stream.BytesStreamOutput;
 import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.conversation.input.ChatInput;
 import org.opensearch.conversation.memory.opensearch.OpensearchIndicesHandler;
@@ -131,8 +133,10 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
         }
         RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(params));
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
-            String answer = mlOutput.toString();
-            log.debug("Chat response for input {} is : () ", chatInput, answer);
+            BytesStreamOutput bytesStreamOutput = new BytesStreamOutput();
+            mlOutput.writeTo(bytesStreamOutput);
+            String answer = bytesStreamOutput.toString();
+            log.error("Chat response for input {} is : () ", chatInput, answer);
 
             try {
                 Instant now = Instant.now();
