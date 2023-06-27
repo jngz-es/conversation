@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.log4j.Log4j2;
 
+import org.apache.commons.lang3.StringUtils;
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.ActionRequest;
 import org.opensearch.action.index.IndexRequest;
@@ -75,7 +76,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
 
     @Override
     protected void doExecute(Task task, ActionRequest request, ActionListener<ChatResponse> listener) {
-        log.error("executing chat");
+        log.error("executing chat 1");
         ChatRequest chatRequest = ChatRequest.fromActionRequest(request);
         ChatInput chatInput = chatRequest.getChatInput();
         if (chatInput.getModelId() == null) {
@@ -122,7 +123,8 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
         log.error("got the history");
 
         Map<String, String> params = chatInput.getParameters();
-        params.put("chat_history", new Gson().toJson(historicalMessages));
+//        params.put("chat_history", new Gson().toJson(historicalMessages));
+        params.put("chat_history", StringUtils.join(historicalMessages, '\n'));
         RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(params));
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
             String answer = mlOutput.toString();
