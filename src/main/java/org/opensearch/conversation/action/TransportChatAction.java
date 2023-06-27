@@ -202,6 +202,10 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                         }, e -> { listener.onFailure(e); });
 
                         IndexRequest indexRequest = new IndexRequest(MESSAGE_INDEX);
+                        log.error("[+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++]");
+                        log.error("[+++++]session id is ({})", sessionId.get());
+                        log.error("[+++++]question is ({})", chatInput.getParameters().get(QUESTION_FIELD));
+                        log.error("[+++++]answer id is ({})", answer);
                         indexRequest.source(
                             Map.of(
                                 SESSION_ID_FIELD,
