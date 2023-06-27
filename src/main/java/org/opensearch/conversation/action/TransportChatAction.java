@@ -132,14 +132,14 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
             log.error("***" + entry.getKey() + " : " + entry.getValue());
         }
         RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(params));
-        log.error("mlInput is : () ", mlInput);
-        log.error("chatInput model id is : () ", chatInput.getModelId());
+        log.error("mlInput is : ({}) ", mlInput);
+        log.error("chatInput model id is : ({}) ", chatInput.getModelId());
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
             BytesStreamOutput bytesStreamOutput = new BytesStreamOutput();
             mlOutput.writeTo(bytesStreamOutput);
             String answer = bytesStreamOutput.toString();
-            log.error("Chat output is : () ", mlOutput);
-            log.error("Chat response for input {} is : () ", chatInput, answer);
+            log.error("Chat output is : ({}) ", mlOutput);
+            log.error("Chat response for input {} is : ({}) ", chatInput, answer);
 
             try {
                 Instant now = Instant.now();
