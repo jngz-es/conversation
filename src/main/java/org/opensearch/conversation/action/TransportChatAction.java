@@ -76,7 +76,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
 
     @Override
     protected void doExecute(Task task, ActionRequest request, ActionListener<ChatResponse> listener) {
-        log.error("executing chat 2");
+        log.error("executing chat 3");
         ChatRequest chatRequest = ChatRequest.fromActionRequest(request);
         ChatInput chatInput = chatRequest.getChatInput();
         if (chatInput.getModelId() == null) {
@@ -127,7 +127,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
         params.put("chat_history", StringUtils.join(historicalMessages, '\n'));
         log.error("parameters is ");
         for (Map.Entry<String, String> entry : params.entrySet()) {
-            log.error(entry.getKey() + " : " + entry.getValue());
+            log.error("***" + entry.getKey() + " : " + entry.getValue());
         }
         RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(params));
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
