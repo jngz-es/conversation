@@ -79,7 +79,6 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
 
     @Override
     protected void doExecute(Task task, ActionRequest request, ActionListener<ChatResponse> listener) {
-        log.error("executing chat 3");
         ChatRequest chatRequest = ChatRequest.fromActionRequest(request);
         ChatInput chatInput = chatRequest.getChatInput();
         if (chatInput.getModelId() == null) {
@@ -87,7 +86,6 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
         }
 
         // Get most recent 20 rounds of session history
-        log.error("getting history");
         List<String> historicalMessages = new ArrayList<>();
         if (!Strings.isNullOrEmpty(chatInput.getSessionId())) {
             int sz = 20;
@@ -123,28 +121,18 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                 listener.onFailure(e);
             }
         }
-        log.error("got the history");
 
         Map<String, String> params = chatInput.getParameters();
-//        params.put("chat_history", new Gson().toJson(historicalMessages));
         params.put("chat_history", StringUtils.join(historicalMessages, '\n'));
-        log.error("parameters is ");
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            log.error("***" + entry.getKey() + " : " + entry.getValue());
-        }
         RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(params));
-        log.error("mlInput is : ({}) ", mlInput);
-        log.error("chatInput model id is : ({}) ", chatInput.getModelId());
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             OutputStreamStreamOutput outputStreamStreamOutput = new OutputStreamStreamOutput(byteArrayOutputStream);
             mlOutput.writeTo(outputStreamStreamOutput);
             String answer = byteArrayOutputStream.toString();
-            log.error("Chat output is : ({}) ", mlOutput);
-            log.error("Chat response for input {} is : ({}) ", chatInput, answer);
+            log.debug("Chat response for input {} is : ({}) ", chatInput, answer);
 
             try {
-                Instant now = Instant.now();
                 AtomicReference<String> sessionId = new AtomicReference<>(chatInput.getSessionId());
 
                 log.info("Ingesting session meta index.");
@@ -190,49 +178,6 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                     log.error("Failed to ingest session metadata index", e);
                     listener.onFailure(e);
                 }));
-/*
-                log.info("Ingesting message index.");
-                indicesHandler.initMessageIndex(ActionListener.wrap(indexCreated -> {
-                    if (!indexCreated) {
-                        listener.onFailure(new RuntimeException("No response to create message index"));
-                        return;
-                    }
-
-                    try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
-                        ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
-                            log.info("Messages have been saved into index, result:{}, session id: {}", r.getResult(), sessionId.get());
-                            ChatResponse response = ChatResponse.builder().sessionId(sessionId.get()).answer(answer).build();
-                            listener.onResponse(response);
-                        }, e -> { listener.onFailure(e); });
-
-                        IndexRequest indexRequest = new IndexRequest(MESSAGE_INDEX);
-                        log.error("[+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++]");
-                        log.error("[+++++]session id is ({})", sessionId.get());
-                        log.error("[+++++]question is ({})", chatInput.getParameters().get(QUESTION_FIELD));
-                        log.error("[+++++]answer id is ({})", answer);
-                        indexRequest.source(
-                            Map.of(
-                                SESSION_ID_FIELD,
-                                sessionId.get(),
-                                QUESTION_FIELD,
-                                chatInput.getParameters().get(QUESTION_FIELD),
-                                ANSWER_FIELD,
-                                answer,
-                                CREATED_TIME_FIELD,
-                                Instant.now().toEpochMilli()
-                            )
-                        );
-                        indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
-                        client.index(indexRequest, ActionListener.runBefore(indexResponseListener, () -> context.restore()));
-                    } catch (Exception e) {
-                        log.error("Failed to save messages", e);
-                        listener.onFailure(e);
-                    }
-                }, e -> {
-                    log.error("Failed to ingest messages index", e);
-                    listener.onFailure(e);
-                }));
-*/
             } catch (IllegalArgumentException illegalArgumentException) {
                 log.error("Failed to chat ", illegalArgumentException);
                 listener.onFailure(illegalArgumentException);
@@ -245,7 +190,6 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
     }
 
     private void storeMessage(String sessionId, String question, String answer, ActionListener<ChatResponse> listener) {
-        log.info("storeMessage start");
         indicesHandler.initMessageIndex(ActionListener.wrap(indexCreated -> {
             if (!indexCreated) {
                 listener.onFailure(new RuntimeException("No response to create message index"));
@@ -260,10 +204,6 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                 }, e -> { listener.onFailure(e); });
 
                 IndexRequest indexRequest = new IndexRequest(MESSAGE_INDEX);
-                log.error("[----------------------------------------------------------]");
-                log.error("[-----]session id is ({})", sessionId);
-                log.error("[-----]question is ({})", question);
-                log.error("[-----]answer id is ({})", answer);
                 indexRequest.source(
                         Map.of(
                                 SESSION_ID_FIELD,
