@@ -82,6 +82,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
         }
 
         // Get most recent 20 rounds of session history
+        log.error("getting history");
         List<String> historicalMessages = new ArrayList<>();
         if (!Strings.isNullOrEmpty(chatInput.getSessionId())) {
             int sz = 20;
@@ -112,8 +113,12 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                     log.error("Failed to get most recent messages from session history index. " + e);
                     listener.onFailure(e);
                 }), () -> context.restore()));
+            } catch (Exception e) {
+                log.error("Failed to get most recent messages from session history index outside. " + e);
+                listener.onFailure(e);
             }
         }
+        log.error("got the history");
 
         Map<String, String> params = chatInput.getParameters();
         params.put("chat_history", new Gson().toJson(historicalMessages));
