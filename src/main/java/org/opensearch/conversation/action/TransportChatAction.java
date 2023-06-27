@@ -35,7 +35,6 @@ import org.opensearch.action.support.WriteRequest;
 import org.opensearch.client.Client;
 import org.opensearch.common.Strings;
 import org.opensearch.common.inject.Inject;
-import org.opensearch.common.io.stream.BytesStreamOutput;
 import org.opensearch.common.io.stream.OutputStreamStreamOutput;
 import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.conversation.input.ChatInput;
@@ -53,8 +52,6 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 import org.opensearch.search.sort.SortOrder;
 import org.opensearch.tasks.Task;
 import org.opensearch.transport.TransportService;
-
-import com.google.gson.Gson;
 
 @Log4j2
 public class TransportChatAction extends HandledTransportAction<ActionRequest, ChatResponse> {
@@ -148,11 +145,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                     try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
                         ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
                             sessionId.set(r.getId());
-                            log.info(
-                                "Session meta has been saved into index, result:{}, session id: {}",
-                                r.getResult(),
-                                sessionId.get()
-                            );
+                            log.info("Session meta has been saved into index, result:{}, session id: {}", r.getResult(), sessionId.get());
                             storeMessage(sessionId.get(), chatInput.getParameters().get(QUESTION_FIELD), answer, listener);
                         }, e -> { listener.onFailure(e); });
 
@@ -205,16 +198,16 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
 
                 IndexRequest indexRequest = new IndexRequest(MESSAGE_INDEX);
                 indexRequest.source(
-                        Map.of(
-                                SESSION_ID_FIELD,
-                                sessionId,
-                                QUESTION_FIELD,
-                                question,
-                                ANSWER_FIELD,
-                                answer,
-                                CREATED_TIME_FIELD,
-                                Instant.now().toEpochMilli()
-                        )
+                    Map.of(
+                        SESSION_ID_FIELD,
+                        sessionId,
+                        QUESTION_FIELD,
+                        question,
+                        ANSWER_FIELD,
+                        answer,
+                        CREATED_TIME_FIELD,
+                        Instant.now().toEpochMilli()
+                    )
                 );
                 indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
                 client.index(indexRequest, ActionListener.runBefore(indexResponseListener, () -> context.restore()));
