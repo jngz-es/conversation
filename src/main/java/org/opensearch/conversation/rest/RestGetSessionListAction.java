@@ -41,6 +41,6 @@ public class RestGetSessionListAction extends BaseRestHandler {
 
     @Override
     public List<Route> routes() {
-        return List.of(new Route(RestRequest.Method.POST, String.format(Locale.ROOT, "%s/sessions", CONVERSATION_BASE_URI)));
+        return List.of(new Route(RestRequest.Method.GET, String.format(Locale.ROOT, "%s/sessions", CONVERSATION_BASE_URI)));
     }
 }

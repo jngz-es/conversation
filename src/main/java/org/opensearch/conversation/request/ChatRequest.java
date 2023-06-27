@@ -44,7 +44,7 @@ public class ChatRequest extends ActionRequest {
 
     @Override
     public ActionRequestValidationException validate() {
-        ActionRequestValidationException exception = new ActionRequestValidationException();
+        ActionRequestValidationException exception = null;
         if (chatInput == null) {
             exception = addValidationError("Chat input can't be null", exception);
         }

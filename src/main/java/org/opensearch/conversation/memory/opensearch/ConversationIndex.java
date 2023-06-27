@@ -6,13 +6,15 @@
 package org.opensearch.conversation.memory.opensearch;
 
 import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
+import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX_MAPPING;
 import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX_SCHEMA_VERSION;
 import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX;
+import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX_MAPPING;
 import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_INDEX_SCHEMA_VERSION;
 
 public enum ConversationIndex {
-    METADATA(SESSION_METADATA_INDEX, false, SESSION_METADATA_INDEX, SESSION_METADATA_INDEX_SCHEMA_VERSION),
-    MESSAGE(MESSAGE_INDEX, false, MESSAGE_INDEX, MESSAGE_INDEX_SCHEMA_VERSION);
+    METADATA(SESSION_METADATA_INDEX, false, SESSION_METADATA_INDEX_MAPPING, SESSION_METADATA_INDEX_SCHEMA_VERSION),
+    MESSAGE(MESSAGE_INDEX, false, MESSAGE_INDEX_MAPPING, MESSAGE_INDEX_SCHEMA_VERSION);
 
     private final String indexName;
     // whether we use an alias for the index
