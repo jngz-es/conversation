@@ -36,6 +36,7 @@ import org.opensearch.client.Client;
 import org.opensearch.common.Strings;
 import org.opensearch.common.inject.Inject;
 import org.opensearch.common.io.stream.BytesStreamOutput;
+import org.opensearch.common.io.stream.OutputStreamStreamOutput;
 import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.conversation.input.ChatInput;
 import org.opensearch.conversation.memory.opensearch.OpensearchIndicesHandler;
@@ -135,9 +136,10 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
         log.error("mlInput is : ({}) ", mlInput);
         log.error("chatInput model id is : ({}) ", chatInput.getModelId());
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
-            BytesStreamOutput bytesStreamOutput = new BytesStreamOutput();
-            mlOutput.writeTo(bytesStreamOutput);
-            String answer = bytesStreamOutput.toString();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            OutputStreamStreamOutput outputStreamStreamOutput = new OutputStreamStreamOutput(byteArrayOutputStream);
+            mlOutput.writeTo(outputStreamStreamOutput);
+            String answer = byteArrayOutputStream.toString();
             log.error("Chat output is : ({}) ", mlOutput);
             log.error("Chat response for input {} is : ({}) ", chatInput, answer);
 
