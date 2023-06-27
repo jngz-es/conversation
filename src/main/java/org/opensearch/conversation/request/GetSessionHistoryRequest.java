@@ -49,7 +49,7 @@ public class GetSessionHistoryRequest extends ActionRequest {
 
     @Override
     public ActionRequestValidationException validate() {
-        ActionRequestValidationException exception = new ActionRequestValidationException();
+        ActionRequestValidationException exception = null;
         if (sessionId.isEmpty()) {
             exception = addValidationError("session id can not be empty", exception);
         } else if (from <= 0 || size <= 0) {

@@ -46,7 +46,7 @@ public class GetSessionListRequest extends ActionRequest {
 
     @Override
     public ActionRequestValidationException validate() {
-        ActionRequestValidationException exception = new ActionRequestValidationException();
+        ActionRequestValidationException exception = null;
         if (from <= 0 || size <= 0) {
             exception = addValidationError("from and size can not be less than or equal to 0", exception);
         }

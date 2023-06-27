@@ -75,6 +75,7 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
 
     @Override
     protected void doExecute(Task task, ActionRequest request, ActionListener<ChatResponse> listener) {
+        log.error("executing chat");
         ChatRequest chatRequest = ChatRequest.fromActionRequest(request);
         ChatInput chatInput = chatRequest.getChatInput();
         if (chatInput.getModelId() == null) {
