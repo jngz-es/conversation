@@ -52,8 +52,8 @@ public class GetSessionHistoryRequest extends ActionRequest {
         ActionRequestValidationException exception = null;
         if (sessionId.isEmpty()) {
             exception = addValidationError("session id can not be empty", exception);
-        } else if (from <= 0 || size <= 0) {
-            exception = addValidationError("from and size can not be less than or equal to 0", exception);
+        } else if (from < 0 || size <= 0) {
+            exception = addValidationError("from can not be less than 0, size can not be less than or equal to 0", exception);
         }
 
         return exception;

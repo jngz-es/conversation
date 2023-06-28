@@ -10,11 +10,13 @@ import static org.opensearch.conversation.common.CommonValue.CREATED_TIME_FIELD;
 import static org.opensearch.conversation.common.CommonValue.MESSAGE_INDEX;
 import static org.opensearch.conversation.common.CommonValue.QUESTION_FIELD;
 import static org.opensearch.conversation.common.CommonValue.SESSION_ID_FIELD;
+import static org.opensearch.ml.common.utils.StringUtils.gson;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -22,10 +24,13 @@ import lombok.extern.log4j.Log4j2;
 
 import org.opensearch.action.ActionListener;
 import org.opensearch.action.ActionRequest;
+import org.opensearch.action.LatchedActionListener;
 import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.support.ActionFilters;
 import org.opensearch.action.support.HandledTransportAction;
 import org.opensearch.client.Client;
+import org.opensearch.common.Strings;
 import org.opensearch.common.inject.Inject;
 import org.opensearch.common.util.concurrent.ThreadContext;
 import org.opensearch.conversation.memory.opensearch.OpensearchIndicesHandler;
@@ -34,8 +39,10 @@ import org.opensearch.conversation.response.GetSessionHistoryResponse;
 import org.opensearch.conversation.transport.GetSessionHistoryAction;
 import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.index.query.TermQueryBuilder;
+import org.opensearch.ml.common.exception.MLException;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.builder.SearchSourceBuilder;
+import org.opensearch.search.fetch.subphase.FetchSourceContext;
 import org.opensearch.search.sort.SortOrder;
 import org.opensearch.tasks.Task;
 import org.opensearch.transport.TransportService;
@@ -74,14 +81,16 @@ public class TransportGetSessionHistoryAction extends HandledTransportAction<Act
             // TODO: scroll search here
             TermQueryBuilder termQueryBuilder = new TermQueryBuilder(SESSION_ID_FIELD, sessionId);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.fetchSource(new FetchSourceContext(true, Strings.EMPTY_ARRAY, Strings.EMPTY_ARRAY));
             searchSourceBuilder.from(from);
             searchSourceBuilder.size(size);
             searchSourceBuilder.query(termQueryBuilder);
             searchSourceBuilder.sort(CREATED_TIME_FIELD, SortOrder.ASC);
-            SearchRequest searchRequest = new SearchRequest(MESSAGE_INDEX).source(searchSourceBuilder);
+            SearchRequest searchRequest = new SearchRequest().source(searchSourceBuilder).indices(MESSAGE_INDEX);
 
-            client.search(searchRequest, ActionListener.runBefore(ActionListener.wrap(r -> {
-                log.debug("Completed Get History Request");
+            CountDownLatch latch = new CountDownLatch(1);
+            LatchedActionListener latchedActionListener = new LatchedActionListener<SearchResponse>(ActionListener.wrap(r -> {
+                log.info("Completed Get History Request");
                 List<GetSessionHistoryResponse.Element> steps = new ArrayList<>();
                 SearchHit[] hits = r.getHits().getHits();
                 if (hits != null && hits.length > 0) {
@@ -90,7 +99,7 @@ public class TransportGetSessionHistoryAction extends HandledTransportAction<Act
                         Map<String, Object> sourceAsMap = hit.getSourceAsMap();
                         String question = (String) sourceAsMap.get(QUESTION_FIELD);
                         String answer = (String) sourceAsMap.get(ANSWER_FIELD);
-                        Instant createdTime = (Instant) sourceAsMap.get(CREATED_TIME_FIELD);
+                        Instant createdTime = Instant.ofEpochMilli((Long) sourceAsMap.get(CREATED_TIME_FIELD));
                         steps.add(
                             GetSessionHistoryResponse.Element.builder().question(question).answer(answer).createdTime(createdTime).build()
                         );
@@ -100,9 +109,15 @@ public class TransportGetSessionHistoryAction extends HandledTransportAction<Act
                     listener.onFailure(new RuntimeException("No hits returned from session history index."));
                 }
             }, e -> {
-                log.error("Failed to search session history index " + e);
-                listener.onFailure(e);
-            }), () -> context.restore()));
+                log.error("Failed to search history index", e);
+            }), latch);
+            client.search(searchRequest, latchedActionListener);
+
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 }

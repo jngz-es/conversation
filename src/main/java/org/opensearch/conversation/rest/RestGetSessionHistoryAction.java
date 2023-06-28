@@ -14,7 +14,7 @@ import java.util.Locale;
 import org.opensearch.client.node.NodeClient;
 import org.opensearch.common.Strings;
 import org.opensearch.conversation.request.GetSessionHistoryRequest;
-import org.opensearch.conversation.transport.GetSessionListAction;
+import org.opensearch.conversation.transport.GetSessionHistoryAction;
 import org.opensearch.rest.BaseRestHandler;
 import org.opensearch.rest.RestRequest;
 import org.opensearch.rest.action.RestToXContentListener;
@@ -34,14 +34,14 @@ public class RestGetSessionHistoryAction extends BaseRestHandler {
         }
         int pageSize = request.paramAsInt("pageSize", 10);
         int currentPage = request.paramAsInt("currentPage", 1);
-        int from = (currentPage - 1) * pageSize + 1;
+        int from = (currentPage - 1) * pageSize;
         return new GetSessionHistoryRequest(sessionId, from, pageSize);
     }
 
     @Override
     protected RestChannelConsumer prepareRequest(RestRequest request, NodeClient client) throws IOException {
         GetSessionHistoryRequest getSessionHistoryRequest = getRequest(request);
-        return channel -> client.execute(GetSessionListAction.INSTANCE, getSessionHistoryRequest, new RestToXContentListener<>(channel));
+        return channel -> client.execute(GetSessionHistoryAction.INSTANCE, getSessionHistoryRequest, new RestToXContentListener<>(channel));
     }
 
     @Override

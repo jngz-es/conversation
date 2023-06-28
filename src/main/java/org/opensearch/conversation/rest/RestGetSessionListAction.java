@@ -29,7 +29,7 @@ public class RestGetSessionListAction extends BaseRestHandler {
     private GetSessionListRequest getRequest(RestRequest request) throws IOException {
         int pageSize = request.paramAsInt("pageSize", 10);
         int currentPage = request.paramAsInt("currentPage", 1);
-        int from = (currentPage - 1) * pageSize + 1;
+        int from = (currentPage - 1) * pageSize;
         return new GetSessionListRequest(from, pageSize);
     }
 

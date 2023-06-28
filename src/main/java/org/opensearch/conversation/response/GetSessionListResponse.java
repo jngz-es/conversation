@@ -85,7 +85,7 @@ public class GetSessionListResponse extends ActionResponse implements ToXContent
         public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
             builder.startObject();
             builder.field(SESSION_ID_FIELD, sessionId);
-            builder.field(SESSION_TITLE_FIELD, sessionId);
+            builder.field(SESSION_TITLE_FIELD, title);
             builder.field(CREATED_TIME_FIELD, createdTime.toEpochMilli());
             builder.endObject();
             return builder;
