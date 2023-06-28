@@ -29,10 +29,10 @@ public class ChatInput implements ToXContentObject, Writeable {
 
     private String sessionId;
     private String modelId;
-    private Map<String, String> parameters;
+    private Map<String, Object> parameters;
 
     @Builder(toBuilder = true)
-    public ChatInput(String sessionId, String modelId, Map<String, String> parameters) {
+    public ChatInput(String sessionId, String modelId, Map<String, Object> parameters) {
         this.sessionId = sessionId;
         this.modelId = modelId;
         this.parameters = parameters;
@@ -41,13 +41,13 @@ public class ChatInput implements ToXContentObject, Writeable {
     public ChatInput(StreamInput in) throws IOException {
         this.sessionId = in.readString();
         this.modelId = in.readString();
-        this.parameters = in.readMap(s -> s.readString(), s -> s.readString());
+        this.parameters = in.readMap();
     }
 
     public static ChatInput parse(XContentParser parser) throws IOException {
         String userId = null;
         String modelId = null;
-        Map<String, String> parameters = new HashMap<>();
+        Map<String, Object> parameters = new HashMap<>();
 
         ensureExpectedToken(XContentParser.Token.START_OBJECT, parser.currentToken(), parser);
         while (parser.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -62,7 +62,7 @@ public class ChatInput implements ToXContentObject, Writeable {
                     modelId = parser.text();
                     break;
                 case ML_PARAMETERS_FIELD:
-                    parameters = parser.mapStrings();
+                    parameters = parser.map();
                     break;
                 default:
                     parser.skipChildren();
@@ -77,7 +77,7 @@ public class ChatInput implements ToXContentObject, Writeable {
     public void writeTo(StreamOutput out) throws IOException {
         out.writeString(sessionId);
         out.writeString(modelId);
-        out.writeMap(parameters, StreamOutput::writeString, StreamOutput::writeString);
+        out.writeMap(parameters);
     }
 
     @Override

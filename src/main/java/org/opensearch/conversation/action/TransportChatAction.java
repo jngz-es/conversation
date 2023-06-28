@@ -15,12 +15,17 @@ import static org.opensearch.conversation.common.CommonValue.SESSION_METADATA_IN
 import static org.opensearch.conversation.common.CommonValue.SESSION_TITLE_FIELD;
 
 import java.io.ByteArrayOutputStream;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.gson.Gson;
 import lombok.extern.log4j.Log4j2;
 
 import org.apache.commons.lang3.StringUtils;
@@ -119,9 +124,15 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
             }
         }
 
-        Map<String, String> params = chatInput.getParameters();
-        params.put("chat_history", StringUtils.join(historicalMessages, '\n'));
-        RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(params));
+        Map<String, Object> params = chatInput.getParameters();
+        Map<String, String> updatedParams = getParameterMap(params);
+        updatedParams.put("chat_history", StringUtils.join(historicalMessages, '\n'));
+        log.debug("********************************** [Chat API] parameters to ml commons start **********************************");
+        for (Map.Entry<String, String> entry : updatedParams.entrySet()) {
+            log.debug("{} : {}", entry.getKey(), entry.getValue());
+        }
+        log.debug("********************************** [Chat API] parameters to ml commons end **********************************");
+        RemoteInferenceMLInput mlInput = new RemoteInferenceMLInput(FunctionName.REMOTE, new RemoteInferenceInputDataSet(updatedParams));
         mlClient.predict(chatInput.getModelId(), mlInput, ActionListener.wrap(mlOutput -> {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             OutputStreamStreamOutput outputStreamStreamOutput = new OutputStreamStreamOutput(byteArrayOutputStream);
@@ -139,18 +150,18 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
                         return;
                     }
                     if (!Strings.isNullOrEmpty(sessionId.get())) {
-                        storeMessage(sessionId.get(), chatInput.getParameters().get(QUESTION_FIELD), answer, listener);
+                        storeMessage(sessionId.get(), (String) chatInput.getParameters().get(QUESTION_FIELD), answer, listener);
                         return;
                     }
                     try (ThreadContext.StoredContext context = client.threadPool().getThreadContext().stashContext()) {
                         ActionListener<IndexResponse> indexResponseListener = ActionListener.wrap(r -> {
                             sessionId.set(r.getId());
                             log.info("Session meta has been saved into index, result:{}, session id: {}", r.getResult(), sessionId.get());
-                            storeMessage(sessionId.get(), chatInput.getParameters().get(QUESTION_FIELD), answer, listener);
+                            storeMessage(sessionId.get(), (String) chatInput.getParameters().get(QUESTION_FIELD), answer, listener);
                         }, e -> { listener.onFailure(e); });
 
                         IndexRequest indexRequest = new IndexRequest(SESSION_METADATA_INDEX);
-                        String title = chatInput.getParameters().get(QUESTION_FIELD);
+                        String title = (String) chatInput.getParameters().get(QUESTION_FIELD);
                         indexRequest.source(
                             Map.of(
                                 SESSION_TITLE_FIELD,
@@ -219,5 +230,25 @@ public class TransportChatAction extends HandledTransportAction<ActionRequest, C
             log.error("Failed to ingest messages index", e);
             listener.onFailure(e);
         }));
+    }
+
+    private Map<String, String> getParameterMap(Map<String, ?> parameterObjs) {
+        Map<String, String> parameters = new HashMap<>();
+        for (String key : parameterObjs.keySet()) {
+            Object value = parameterObjs.get(key);
+            try {
+                AccessController.doPrivileged((PrivilegedExceptionAction<Void>) () -> {
+                    if (value instanceof String) {
+                        parameters.put(key, (String)value);
+                    } else {
+                        parameters.put(key, new Gson().toJson(value));
+                    }
+                    return null;
+                });
+            } catch (PrivilegedActionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return parameters;
     }
 }
